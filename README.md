@@ -92,10 +92,10 @@ Pleae go into the folders, read the instructions and deploy each template.
 After you have modified all the **parameters** and **variables** as mentioned above, you can run the following commands to deploy the ARM templates. This will provision the **vnet, subnet, jumpbox, security group**.
 
     # Create resource groups
-    az deployment sub create --name resourceGroups20200702a --location eastus --template-uri https://ctxmiscstor1.blob.core.windows.net/scriptspublic/arm/templates/nested/ctx-azure-templates-adc-cew-demo/azuredeploy-rg.json --parameters https://ctxmiscstor1.blob.core.windows.net/scriptspublic/arm/templates/nested/ctx-azure-templates-adc-cew-demo/azuredeploy-east-us.parameters.json
+    az deployment sub create --name resourceGroups20200702a --location eastus --template-uri https://raw.githubusercontent.com/mschirrmeister/ctx-azure-templates-adc-demo-cew/master/azuredeploy-rg.json --parameters https://raw.githubusercontent.com/mschirrmeister/ctx-azure-templates-adc-demo-cew/master/azuredeploy-east-us.parameters.json
     
     # Deploy VNET, Jumpbox, security groups and ADC
-    az deployment sub create --name resources20200702a --location eastus --template-uri https://ctxmiscstor1.blob.core.windows.net/scriptspublic/arm/templates/nested/ctx-azure-templates-adc-cew-demo/azuredeploy.json --parameters https://ctxmiscstor1.blob.core.windows.net/scriptspublic/arm/templates/nested/ctx-azure-templates-adc-cew-demo/azuredeploy-east-us.parameters.json --query '[{ADCFqdn:properties.outputs.adcFqdn.value, ADCIp:properties.outputs.adcPublicIPs.value, jumpboxFqdn:properties.outputs.jumpboxFqdn.value}]'
+    az deployment sub create --name resources20200702a --location eastus --template-uri https://raw.githubusercontent.com/mschirrmeister/ctx-azure-templates-adc-demo-cew/master/azuredeploy.json --parameters https://raw.githubusercontent.com/mschirrmeister/ctx-azure-templates-adc-demo-cew/master/azuredeploy-east-us.parameters.json --query '[{ADCFqdn:properties.outputs.adcFqdn.value, ADCIp:properties.outputs.adcPublicIPs.value, jumpboxFqdn:properties.outputs.jumpboxFqdn.value}]'
     
     # Show names
     az deployment sub show --name resources20200702a --query '[{ADCFqdn:properties.outputs.adcFqdn.value, ADCIp:properties.outputs.adcPublicIPs.value, jumpboxFqdn:properties.outputs.jumpboxFqdn.value}]' --output table

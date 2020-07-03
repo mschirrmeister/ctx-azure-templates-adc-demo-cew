@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vnetRg": {
+          "value": "demo-vnet-east-us-1"
+        },
+        "jumpboxRg": {
+          "value": "demo-jumpbox-east-us-1"
+        },
+        "nsgRg": {
+          "value": "demo-network-security-groups-east-us-1"
+        },
+        "adcRg": {
+          "value": "demo-citrix-adc-east-us-1"
+        },
+        "location": {
+          "value": "eastus"
+        }
+    }
+}

@@ -1,0 +1,466 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUsername": {
+            "defaultValue": null,
+            "type": "string"
+        },
+        "adminPassword": {
+            "defaultValue": null,
+            "type": "securestring"
+        },
+        "avSet": {
+            "defaultValue": null,
+            "type": "string"
+        },
+        "vmDnsPrefix": {
+            "defaultValue": null,
+            "type": "string"
+        },
+        "storageAccountType": {
+            "type": "string",
+          "defaultValue": "Premium_LRS",
+          "allowedValues": [
+            "Standard_LRS",
+            "Standard_ZRS",
+            "Standard_GRS",
+            "Standard_RAGRS",
+            "Premium_LRS"
+          ]
+        },
+        "storageAccountTier": {
+            "defaultValue": "null",
+            "type": "string"
+        },
+        "diagnosticsStorageAccountName": {
+            "defaultValue": null,
+            "type": "string"
+        },
+        "diagnosticsStorageAccountType": {
+            "type": "string",
+            "defaultValue": "Standard_LRS",
+            "allowedValues": [
+                "Standard_LRS",
+                "Standard_GRS",
+                "Standard_RAGRS"
+            ]
+        },
+        "diagnosticsStorageAccountTier": {
+            "defaultValue": null,
+            "type": "string"
+        },
+        "virtualNetworkName": {
+            "defaultValue": null,
+            "type": "String"
+        },
+        "vnetRg": {
+            "defaultValue": null,
+            "type": "String"
+        },
+        "vmSize": {
+            "type": "string",
+          "defaultValue": "Standard_DS3_v2",
+          "allowedValues": [
+            "Standard_A1",
+            "Standard_A2",
+            "Standard_A3",
+            "Standard_A4",
+            "Standard_A1_v2",
+            "Standard_A2_v2",
+            "Standard_A3_v2",
+            "Standard_A4_v2",
+            "Standard_D1",
+            "Standard_D2",
+            "Standard_D3",
+            "Standard_D4",
+            "Standard_DS1_v2",
+            "Standard_DS2_v2",
+            "Standard_DS3_v2",
+            "Standard_DS4_v2"
+          ],
+          "metadata": {
+            "description": "Size of VM"
+          }
+        },
+        "subnetName_Front": {
+            "defaultValue": null,
+            "type": "string"
+        },
+        "subnetName_Back": {
+            "defaultValue": null,
+            "type": "string"
+        },
+        "numberOfInstances": {
+            "defaultValue": null,
+            "type": "int"
+        },
+        "NetScalerVersion": {
+            "type": "string",
+            "defaultValue": "netscalerbyol",
+            "allowedValues": [
+            "netscalerbyol",
+            "netscalerexpress",
+            "netscaler10standard",
+            "netscaler200standard",
+            "netscaler1000standard",
+            "netscaler3000standard",
+            "netscaler10enterprise",
+            "netscaler200enterprise",
+            "netscaler1000enterprise",
+            "netscaler3000enterprise",
+            "netscaler10platinum",
+            "netscaler200platinum",
+            "netscaler1000platinum",
+            "netscaler3000platinum"
+          ],
+          "metadata": {
+            "description": "Also called imageSKU. The CentOS version for the VM. Allowed values: netscalerbyol."
+          }
+        },
+        "imageVersion": {
+            "type": "string",
+            "defaultValue": "latest",
+            "metadata": {
+                "desription": "Version of the image."
+            }
+        },
+        "environment": {
+            "defaultValue": "null",
+            "type": "string"
+        },
+        "pip_name": {
+          "defaultValue": "null",
+          "type": "string",
+          "metadata": {
+            "description": "public ip address 1 name"
+          }
+        },
+        "pip_name_dns": {
+          "defaultValue": null,
+          "type": "string",
+          "metadata": {
+            "description": "public ip address 1 name"
+          }
+        },
+        "nsgRg": {
+            "defaultValue": null,
+            "type": "string"
+        },
+        "nsg_name": {
+          "defaultValue": null,
+          "type": "string",
+          "metadata": {
+            "description": "Name for the security group"
+          }
+        },
+        "TagServerType": {
+            "defaultValue": "null",
+            "type": "string"
+        },
+        "TagServerRole": {
+            "defaultValue": "null",
+            "type": "string"
+        },
+        "TagEnvironment": {
+            "defaultValue": "null",
+            "type": "string"
+        },
+        "subscriptionId": {
+          "defaultValue": null,
+          "type": "string"
+        },
+        "TmplTimestamp": {
+            "defaultValue": "null",
+            "type": "string"
+        }
+    },
+    "variables": {
+        "_comment1": "If you need a comments in those arm templates, you could do it this way with variables",
+        "_comment2": "This template uses a 'managed' disk for the osDisk",
+        "azureCloudAppDomain": "cloudapp.azure.com",
+        "imagePublisher": "citrix",
+        "imageOffer": "netscalervpx-121",
+        "vmStorageAccountContainerName": "vhds",
+        "vmName": "[parameters('vmDnsPrefix')]",
+        "apiVersion": "2015-06-15",
+        "storageApiVersion": "2016-01-01",
+        "subscriptionId": "[subscription().subscriptionId]",
+        "vnetId": "[concat('/subscriptions/',variables('subscriptionId'),'/resourceGroups/',parameters('vnetRg'),'/providers/Microsoft.Network/virtualNetworks/',parameters('virtualNetworkName'))]",
+        "subnetRef_Front": "[concat(variables('vnetId'),'/subnets/',parameters('subnetName_Front'))]",
+        "subnetRef_Back": "[concat(variables('vnetId'),'/subnets/',parameters('subnetName_Back'))]",
+        "nsgRgRef": "[concat('/subscriptions/',variables('subscriptionId'),'/resourceGroups/',parameters('nsgRg'),'/providers/Microsoft.Network/networkSecurityGroups/',parameters('nsg_name'))]"
+    },
+    "resources": [
+        {
+            "comments": "Availability Set",
+            "sku": {
+                "name": "Aligned"
+            },
+            "type": "Microsoft.Compute/availabilitySets",
+            "name": "[parameters('avSet')]",
+            "apiVersion": "2018-06-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "platformUpdateDomainCount": 5,
+                "platformFaultDomainCount": 3
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "comments": "Virtual machine",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'))]",
+            "apiVersion": "2018-04-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "ServerType": "[parameters('TagServerType')]",
+                "ServerRole": "[parameters('TagServerRole')]",
+                "Environment": "[parameters('TagEnvironment')]"
+            },
+            "plan": {
+                "name": "[parameters('NetScalerVersion')]",
+                "product": "[variables('imageOffer')]",
+                "publisher": "[variables('imagePublisher')]"
+            },
+            "properties": {
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('avSet'))]"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[variables('imagePublisher')]",
+                        "offer": "[variables('imageOffer')]",
+                        "sku": "[parameters('NetScalerVersion')]",
+                        "version": "[parameters('imageVersion')]"
+                    },
+                    "osDisk": {
+                        "osType": "Linux",
+                        "name": "[concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-os')]",
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "[parameters('storageAccountType')]"
+                        },
+                        "caching": "ReadWrite"
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'))]",
+                    "adminUsername": "nsroot",
+                    "customData": "[base64(concat('{ \"username\" : \"', parameters('adminUsername'), '\", \"vpx_config\" : { \"snip_11\" : \"', reference(concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-nic',copyIndex(1))).ipConfigurations[0].properties.privateIPAddress ,'\", \"pvt_ip_11\" : \"', reference(concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-nic',copyIndex(1))).ipConfigurations[1].properties.privateIPAddress ,'\", \"subnet_11\" : \"', reference(variables('subnetRef_Front'), '2018-11-01', 'Full').properties.addressPrefix,'\", \"subnet_12\" : \"', reference(variables('subnetRef_Front'), '2018-11-01', 'Full').properties.addressPrefix,'\" }}'))]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": false
+                    },
+                    "secrets": [],
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-nic',copyIndex()))]",
+                            "properties": { "primary": true }
+                        },
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-nic',copyIndex(1)))]",
+                            "properties": { "primary": false }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[concat('https', '://', parameters('diagnosticsStorageAccountName'), '.blob.core.windows.net', '/')]"
+                    }
+                }
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/availabilitySets', parameters('avSet'))]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('diagnosticsStorageAccountName'))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-nic',copyIndex()))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-nic',copyIndex(1)))]"
+            ],
+            "copy": {
+              "name": "vmCopy",
+              "count": "[parameters('numberOfInstances')]"
+          }
+        },
+        {
+            "comments": "Network Interface",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-nic',copyIndex())]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('subnetRef_Back')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    },
+                    {
+                        "name": "ipconfig2",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('subnetRef_Back')]"
+                            },
+                            "primary": false,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableIPForwarding": false
+            },
+            "resources": [],
+            "dependsOn": [],
+            "copy": {
+              "name": "vmCopy",
+              "count": "[parameters('numberOfInstances')]"
+          }
+        },
+        {
+            "comments": "Network Interface",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-nic',copyIndex(1))]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('subnetRef_Front')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    },
+                    {
+                        "name": "ipconfig2",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[concat(resourceId('Microsoft.Network/publicIPAddresses', parameters('pip_name')), copyIndex(1))]"
+                            },
+                            "subnet": {
+                                "id": "[variables('subnetRef_Front')]"
+                            },
+                            "primary": false,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableIPForwarding": false,
+                "networkSecurityGroup": {
+                    "id": "[variables('nsgRgRef')]"
+            }
+            },
+            "resources": [],
+            "dependsOn": [
+                "[concat(resourceId('Microsoft.Network/publicIPAddresses', parameters('pip_name')), copyIndex(1))]"
+            ],
+            "copy": {
+              "name": "vmCopy",
+              "count": "[parameters('numberOfInstances')]"
+          }
+        },
+        {
+            "comments": "Public Ip Address",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[concat(parameters('pip_name'),copyIndex(1))]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "idleTimeoutInMinutes": 4,
+                "dnsSettings": {
+                    "domainNameLabel": "[concat(parameters('pip_name_dns'),copyIndex(1))]",
+                    "reverseFqdn": "[concat(parameters('pip_name_dns'),copyIndex(1), '.', resourceGroup().location, '.', variables('azureCloudAppDomain'))]"
+                }
+            },
+            "resources": [],
+            "dependsOn": [],
+            "copy": {
+                "name": "pipCopy",
+                "count": "[parameters('numberOfInstances')]"
+              }
+        },
+        {
+            "comments": "Diagnostics Storage Account",
+            "name": "[parameters('diagnosticsStorageAccountName')]",
+            "apiVersion": "[variables('storageApiVersion')]",
+            "location": "[resourceGroup().location]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "tags": {},
+            "sku": {
+                "name": "[parameters('diagnosticsStorageAccountType')]",
+                "tier": "[parameters('diagnosticsStorageAccountTier')]"
+            },
+            "kind": "Storage",
+            "properties": {},
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "comments": "Diagnostic Extension",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('VmDnsPrefix'), copyIndex(1),parameters('environment'), '/LinuxDiagnostic')]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publisher": "Microsoft.OSTCExtensions",
+                "type": "LinuxDiagnostic",
+                "typeHandlerVersion": "2.3",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                },
+                "protectedSettings": {
+                    "storageAccountName": "[parameters('diagnosticsStorageAccountName')]",
+                    "storageAccountKey": "[listKeys(parameters('diagnosticsStorageAccountName'),providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
+                }
+            },
+            "copy": {
+              "name": "scriptCopy",
+              "count": "[parameters('NumberOfInstances')]"
+            },
+            "resources": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', concat(parameters('VmDnsPrefix'), copyIndex(1),parameters('environment')))]"
+            ]
+        }
+    ],
+    "outputs": {
+        "fqdn": {
+            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('pip_name'), '1'))).dnsSettings.fqdn]",
+            "type": "string"
+        },
+        "publicIPs": {
+          "type": "object",
+          "value": {
+            "VM1": {
+              "publicIP": "[reference(resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('pip_name'), '1'))).ipAddress]"
+            }
+          }
+        }
+      }
+}

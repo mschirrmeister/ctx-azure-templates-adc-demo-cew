@@ -1,0 +1,104 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "nsgRg": {
+          "type": "string",
+          "metadata": {
+            "description": "Resource group for the security group"
+          }
+        },
+        "nsg_name": {
+          "defaultValue": null,
+          "type": "string",
+          "metadata": {
+            "description": "Name for the security group"
+          }
+        },
+        "environment": {
+          "defaultValue": "Unknown",
+          "type": "string"
+        },
+        "TagServerType": {
+          "defaultValue": "Unknown",
+          "type": "string",
+          "metadata": {
+            "description": "ServerType tag"
+          }
+        },
+        "TagServerRole": {
+          "defaultValue": "Unknown",
+          "type": "string",
+          "metadata": {
+            "description": "ServerRole tag"
+          }
+        },
+        "TagEnvironment": {
+          "defaultValue": "Unknown",
+          "type": "string",
+          "metadata": {
+            "description": "Environment tag"
+          }
+        }
+    },
+    "variables": {
+      "_comment1": "If you need a comments in those arm templates, you could do it this way with variables",
+      "apiVersion": "2015-06-15"
+    },
+    "resources": [
+        {
+            "comments": "Network Security Group",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "[concat(parameters('nsg_name'), '-', parameters('environment'))]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "Allow_ANY_IN",
+                        "properties": {
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "Allow_ANY_OUT",
+                        "properties": {
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    }
+                ]
+            },
+            "tags": {
+            "ServerType": "[parameters('TagServerType')]",
+            "ServerRole": "[parameters('TagServerRole')]",
+            "Environment": "[parameters('TagEnvironment')]"
+          },
+            "resources": [],
+            "dependsOn": []
+        }
+    ],
+    "outputs": {
+    }
+}

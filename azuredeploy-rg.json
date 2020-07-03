@@ -1,0 +1,80 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "vnetRg": {
+        "type": "string",
+        "metadata": {
+          "description": "vnet resource group name"
+        }
+      },
+      "jumpboxRg": {
+        "type": "string",
+        "metadata": {
+          "description": "jumpBox resource group name"
+        }
+      },
+      "nsgRg": {
+        "type": "string",
+        "metadata": {
+          "description": "vnet resource group name"
+        }
+      },
+      "adcRg": {
+        "type": "string",
+        "metadata": {
+          "description": "vnet resource group name"
+        }
+      },
+      "location": {
+        "type": "string",
+        "defaultValue": "eastus",
+        "metadata": {
+          "description": "location"
+        }
+      }
+    },
+    "variables": {
+      "_comment1": "If you need a comments in those arm templates, you could do it this way with variables"
+    },
+    "resources": [
+        {
+          "name": "[parameters('vnetRg')]",
+          "type": "Microsoft.Resources/resourceGroups",
+          "apiVersion": "2020-06-01",
+          "location": "[parameters('location')]",
+          "tags": {},
+          "properties": {
+          }
+        },
+        {
+          "name": "[parameters('jumpboxRg')]",
+          "type": "Microsoft.Resources/resourceGroups",
+          "apiVersion": "2020-06-01",
+          "location": "[parameters('location')]",
+          "tags": {},
+          "properties": {
+          }
+        },
+        {
+          "name": "[parameters('nsgRg')]",
+          "type": "Microsoft.Resources/resourceGroups",
+          "apiVersion": "2020-06-01",
+          "location": "[parameters('location')]",
+          "tags": {},
+          "properties": {
+          }
+        },
+        {
+          "name": "[parameters('adcRg')]",
+          "type": "Microsoft.Resources/resourceGroups",
+          "apiVersion": "2020-06-01",
+          "location": "[parameters('location')]",
+          "tags": {},
+          "properties": {
+          }
+        }
+    ],
+    "outputs": {
+    }
+}

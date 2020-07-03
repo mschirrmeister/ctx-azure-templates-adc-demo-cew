@@ -1,0 +1,194 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "VNETName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the VNet"
+      }
+    },
+    "addressprefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Prefix for VNet"
+      }
+    },
+    "Subnet1Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Name"
+      }
+    },
+    "Subnet1Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Prefix"
+      }
+    },
+    "Subnet2Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Name"
+      }
+    },
+    "Subnet2Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Prefix"
+      }
+    },
+    "Subnet3Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Name"
+      }
+    },
+    "Subnet3Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Prefix"
+      }
+    },
+    "Subnet4Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Name"
+      }
+    },
+    "Subnet4Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Prefix"
+      }
+    },
+    "Subnet5Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Name"
+      }
+    },
+    "Subnet5Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Prefix"
+      }
+    },
+    "Subnet6Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Name"
+      }
+    },
+    "Subnet6Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Prefix"
+      }
+    },
+    "Subnet7Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Name"
+      }
+    },
+    "Subnet7Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Prefix"
+      }
+    },
+    "Subnet8Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Name"
+      }
+    },
+    "Subnet8Prefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet Prefix"
+      }
+    }
+  },
+  "variables": {
+    "apiVersion": "2020-04-01"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "[variables('apiVersion')]",
+      "name": "[parameters('VNETName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+           "addressSpace": {
+               "addressPrefixes": [
+                   "[parameters('addressprefix')]"
+               ]
+           },
+           "dhcpOptions": {
+               "dnsServers": []
+           },
+           "subnets": [
+                 {
+      "name": "[parameters('Subnet1Name')]",
+      "properties": {
+        "addressPrefix": "[parameters('Subnet1Prefix')]"
+      }
+    },
+    {
+      "name": "[parameters('Subnet2Name')]",
+      "properties": {
+        "addressPrefix": "[parameters('Subnet2Prefix')]"
+      }
+    },
+    {
+      "name": "[parameters('Subnet3Name')]",
+      "properties": {
+        "addressPrefix": "[parameters('Subnet3Prefix')]"
+      }
+    },
+    {
+      "name": "[parameters('Subnet4Name')]",
+      "properties": {
+        "addressPrefix": "[parameters('Subnet4Prefix')]"
+      }
+    },
+    {
+      "name": "[parameters('Subnet5Name')]",
+      "properties": {
+        "addressPrefix": "[parameters('Subnet5Prefix')]"
+      }
+    },
+    {
+      "name": "[parameters('Subnet6Name')]",
+      "properties": {
+        "addressPrefix": "[parameters('Subnet6Prefix')]"
+      }
+    },
+    {
+      "name": "[parameters('Subnet7Name')]",
+      "properties": {
+        "addressPrefix": "[parameters('Subnet7Prefix')]"
+      }
+    },
+    {
+      "name": "[parameters('Subnet8Name')]",
+      "properties": {
+        "addressPrefix": "[parameters('Subnet8Prefix')]"
+      }
+    }
+           ],
+           "virtualNetworkPeerings": [],
+           "enableDdosProtection": false,
+           "enableVmProtection": false
+      }
+    }
+  ],
+  "outputs": {
+    "vnet": {
+            "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', parameters('VNETName'))).provisioningState]",
+            "type": "string"
+        }
+  }
+}

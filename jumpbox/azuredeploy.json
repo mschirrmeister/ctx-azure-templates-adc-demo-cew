@@ -1,0 +1,355 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUsername": {
+          "type": "string",
+          "metadata": {
+            "description": "This is the username you wish to assign to your VMs admin account"
+          }
+        },
+        "adminPassword": {
+          "defaultValue": null,
+          "type": "securestring",
+          "metadata": {
+            "description": "This is the password you wish to assign to your VMs admin account"
+          }
+        },
+        "centOSVersion": {
+          "type": "string",
+          "defaultValue": "7.2",
+          "metadata": {
+            "description": "The CentOS version for the VM. Allowed values: 7.0, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7_8."
+          }
+        },
+        "imageVersion": {
+          "type": "string",
+          "defaultValue": "latest",
+          "metadata": {
+            "desription": "Version of the image."
+          }
+        },
+        "vmDnsPrefix": {
+          "defaultValue": null,
+          "type": "string"
+        },
+        "vmSize": {
+          "type": "string",
+          "defaultValue": "Standard_A2",
+          "metadata": {
+            "description": "Size of VM"
+          }
+        },
+        "virtualNetworkName": {
+          "defaultValue": null,
+          "type": "string"
+        },
+        "vnetRg": {
+          "defaultValue": null,
+          "type": "string"
+        },
+        "subnetName": {
+          "defaultValue": null,
+          "type": "string"
+        },
+        "numberOfInstances": {
+            "type": "int",
+            "defaultValue": 1
+        },
+        "environment": {
+          "defaultValue": "",
+          "type": "string"
+        },
+        "dataDiskSizeInGB": {
+          "defaultValue": null,
+          "type": "string"
+        },
+        "sshkeyData": {
+          "type": "string",
+          "defaultValue": null,
+          "metadata": {
+            "description": "SSH rsa public key file as a string."
+          }
+        },
+        "pip_name_dns": {
+          "defaultValue": null,
+          "type": "string",
+          "metadata": {
+            "description": "public ip address 1 name"
+          }
+        },
+        "TagServerType": {
+          "defaultValue": "Unknown",
+          "type": "string",
+          "metadata": {
+            "description": "ServerType tag"
+          }
+        },
+        "TagServerRole": {
+          "defaultValue": "Unknown",
+          "type": "string",
+          "metadata": {
+            "description": "ServerRole tag"
+          }
+        },
+        "TagEnvironment": {
+          "defaultValue": "Unknown",
+          "type": "string",
+          "metadata": {
+            "description": "Environment tag"
+          }
+        },
+        "TmplTimestamp": {
+          "type": "string"
+        }
+    },
+    "variables": {
+      "_comment1": "If you need a comments in those arm templates, you could do it this way with variables",
+      "azureCloudAppDomain": "cloudapp.azure.com",
+      "imagePublisher": "OpenLogic",
+      "imageOffer": "CentOS",
+      "storageAccountType": "StandardSSD_LRS",
+      "apiVersion": "2015-06-15",
+      "sshKeyPath": "[concat('/home/',parameters('adminUsername'),'/.ssh/authorized_keys')]",
+      "subscriptionId": "[subscription().subscriptionId]",
+      "vnetId": "[concat('/subscriptions/',variables('subscriptionId'),'/resourceGroups/',parameters('vnetRg'),'/providers/Microsoft.Network/virtualNetworks/',parameters('virtualNetworkName'))]",
+      "subnetRef": "[concat(variables('vnetId'),'/subnets/',parameters('subnetName'))]"
+    },
+    "resources": [
+        {
+          "comments": "Availability Set",
+          "metadata": {
+            "description": "foo"
+          },
+          "sku": {
+              "name": "Aligned"
+          },
+          "type": "Microsoft.Compute/availabilitySets",
+          "name": "[concat(parameters('vmDnsPrefix'),parameters('environment'),'-as')]",
+          "apiVersion": "2018-06-01",
+          "location": "[resourceGroup().location]",
+          "tags": { },
+          "properties": {
+            "platformUpdateDomainCount": 5,
+            "platformFaultDomainCount": 3
+          },
+          "dependsOn": [ ]
+        },
+        {
+          "comments": "Virtual machine",
+          "type": "Microsoft.Compute/virtualMachines",
+          "name": "[concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'))]",
+          "apiVersion": "2018-04-01",
+          "location": "[resourceGroup().location]",
+          "tags": {
+            "ServerType": "[parameters('TagServerType')]",
+            "ServerRole": "[parameters('TagServerRole')]",
+            "Environment": "[parameters('TagEnvironment')]"
+          },
+          "properties": {
+            "availabilitySet": {
+              "id": "[resourceId('Microsoft.Compute/availabilitySets', concat(parameters('vmDnsPrefix'),parameters('environment'),'-as'))]"
+            },
+            "hardwareProfile": {
+              "vmSize": "[parameters('vmSize')]"
+            },
+            "storageProfile": {
+              "imageReference": {
+                "publisher": "[variables('imagePublisher')]",
+                "offer": "[variables('imageOffer')]",
+                "sku": "[parameters('centOSVersion')]",
+                "version": "[parameters('imageVersion')]"
+              },
+              "osDisk": {
+                "name": "[concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-os')]",
+                "createOption": "FromImage",
+                "managedDisk": {
+                  "storageAccountType": "[variables('storageAccountType')]"
+                },
+                "caching": "ReadWrite"
+              },
+              "dataDisks": [
+                {
+                  "name": "[concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-datadisk1')]",
+                  "createOption": "attach",
+                  "diskSizeGB": "[parameters('dataDiskSizeInGB')]",
+                  "lun": 0,
+                  "managedDisk": {
+                    "id": "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-datadisk1'))]"
+                  },
+                  "caching": "None"
+                }
+              ]
+            },
+            "osProfile": {
+              "computerName": "[concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'))]",
+              "adminUsername": "[parameters('adminUsername')]",
+              "linuxConfiguration": {
+                "disablePasswordAuthentication": true,
+                "ssh": {
+                  "publicKeys": [
+                    {
+                      "path": "[variables('sshKeyPath')]",
+                      "keyData": "[parameters('sshKeyData')]"
+                    }
+                  ]
+                }
+              },
+              "secrets": [ ],
+              "adminPassword": "[parameters('adminPassword')]"
+            },
+            "networkProfile": {
+              "networkInterfaces": [
+                {
+                  "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-nic',copyIndex()))]"
+                }
+              ]
+            }
+          },
+          "copy": {
+              "name": "vmCopy",
+              "count": "[parameters('numberOfInstances')]"
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/availabilitySets', concat(parameters('vmDnsPrefix'),parameters('environment'),'-as'))]",
+            "[resourceId('Microsoft.Compute/disks/', concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-datadisk1'))]",
+            "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-nic',copyIndex()))]"
+          ]
+        },
+        {
+          "type": "Microsoft.Compute/disks",
+          "apiVersion": "2018-06-01",
+          "name": "[concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-datadisk1')]",
+          "location": "[resourceGroup().location]",
+          "sku": {
+            "name": "Standard_LRS"
+          },
+          "properties": {
+            "creationData": {
+              "createOption": "Empty"
+            },
+          "diskSizeGB": "[parameters('dataDiskSizeInGB')]"
+          },
+          "copy": {
+              "name": "diskCopy",
+              "count": "[parameters('numberOfInstances')]"
+          }
+        },
+        {
+          "comments": "Network interface",
+          "type": "Microsoft.Network/networkInterfaces",
+          "name": "[concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-nic',copyIndex())]",
+          "apiVersion": "[variables('apiVersion')]",
+          "location": "[resourceGroup().location]",
+          "properties": {
+            "ipConfigurations": [
+              {
+                "name": "[concat('Nic-IP-config')]",
+                "properties": {
+                  "privateIPAllocationMethod": "Dynamic",
+                  "subnet": {
+                    "id": "[variables('subnetRef')]"
+                  },
+                  "publicIPAddress": {
+                    "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-pip1'))]"
+                  }
+                }
+              }
+            ],
+            "dnsSettings": {
+              "dnsServers": [ ]
+            },
+            "enableIPForwarding": false,
+            "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('vmDnsPrefix'),parameters('environment'),'-nsg1'))]"
+            }
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-pip1'))]",
+            "[resourceId('Microsoft.Network/networkSecurityGroups', concat(parameters('vmDnsPrefix'),parameters('environment'),'-nsg1'))]"
+          ],
+          "copy": {
+              "name": "nicCopy",
+              "count": "[parameters('numberOfInstances')]"
+          }
+        },
+        {
+            "comments": "Network Security Group",
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "[concat(parameters('vmDnsPrefix'),parameters('environment'),'-nsg1')]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "AllowSSHInBound",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    }
+                ]
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "comments": "Public IP",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[concat(parameters('vmDnsPrefix'),copyIndex(1),parameters('environment'),'-pip1')]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4,
+                "dnsSettings": {
+                    "domainNameLabel": "[parameters('pip_name_dns')]",
+                    "reverseFqdn": "[concat(parameters('pip_name_dns'), '.', resourceGroup().location, '.', variables('azureCloudAppDomain'))]"
+                }
+            },
+            "copy": {
+              "name": "pipCopy",
+              "count": "[parameters('numberOfInstances')]"
+            },
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('vmDnsPrefix'), copyIndex(1),parameters('environment'), '/azureVmUtils')]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+              "[resourceId('Microsoft.Compute/virtualMachines', concat(parameters('vmDnsPrefix'), copyIndex(1),parameters('environment')))]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "CustomScript",
+                "typeHandlerVersion": "2.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "timestamp": "[int(parameters('TmplTimestamp'))]"
+                },
+                "protectedSettings": {
+                  "script": "IyEvYmluL2Jhc2gKCiMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIwojIGRlZmF1bHQgdmFsdWVzCgojIHZlcnNpb24gb2YgdGhpcyBzY3JpcHQKVkVSU0lPTj0iMC4wLjgiCiMgc2V0IHRoaXMgdG8gdGhlIHJlc29sdi5jb25mCkRPTUFJTj0iYXpyLmxhYi5wYW5kb3JhbGIubmV0IGxhYi5wYW5kb3JhbGIubmV0IHBhbmRvcmFsYi5uZXQiCiMgZW5hYmxlL2Rpc2FibGUgeXVtIHVwZGF0ZQpVUERBVEU9ImZhbHNlIgojIHNldCBzd2FwIHNpemUKU1dBUD0iIgojIGVuYWJsZS9kaXNhYmxlIHNlbGludXgKU0VMSU5VWD0iIgojIGxvZ3MgZm9yIHRoaXMgc2NyaXB0CkxPR0ZJTEU9Ii9yb290L2NvbmZpZ3VyZS5sb2ciCiMgb3BlcmF0aW9uIHN5c3RlbSB0aGlzIHNjcmlwdCBnZXRzIGV4ZWN1dGVkCk9TPSIiClJFQk9PVD0iZmFsc2UiCkROUz0iZmFsc2UiClBETlNfVVJMPSJodHRwOi8vMTAuMjE4LjEwLjk6ODA4MSIKUEROU19QQVNTV09SRD0ieHh4IgpaQUJCSVhfU0VSVkVSPSJhemVhdXN6YWJiaXgxLmF6ci5sYWIucGFuZG9yYWxiLm5ldCIKWkFCQklYX0hPU1RNRVRBREFUQT0iTGludXggYmxhYmx1YiIKCiMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIwojIHN1YiByb3V0aW5lcwoKCnVzYWdlKCkgewpjYXQgPDwgRU9GCnVzYWdlOiAkMCBvcHRpb25zCgpPUFRJT05TOgogICAtaCAgICAgIFNob3cgdGhpcyBtZXNzYWdlCiAgIC1kICAgICAgc3BlY2lmeSBkb21haW4uIERlZmF1bHQgaXMgIiRET01BSU4iCiAgIC1sICAgICAgbG9nZmlsZSBsb2NhdGlvbi4gRGVmYXVsdCBpcyAkTE9HRklMRQogICAtbSAgICAgIEluc3RhbGwgWmFiYml4IGFnZW50CiAgIC1uICAgICAgbmFtZSB1cGRhdGUgdG8gRE5TCiAgIC1yICAgICAgcmVib290IHRoZSBzeXRlbSBhdCB0aGUgZW5kCiAgIC1zICAgICAgY3JlYXRlIHN3YXAgKC1zIDEwMjQgY3JlYXRlIDFHQikKICAgLVMgICAgICBkaXNhYmxlIHN3YXAKICAgLXUgICAgICBpbnZva2VzICJ5dW0gdXBkYXRlIgogICAtdyAgICAgIHdhaXQgbG9vcCBmb3IgdGhlIG5ldHdvcmsgdG8gYmUgcmVhZHkKICAgLXogICAgICBkaXNhYmxlIHNlbGludXgKICAgLVogICAgICBlbmFibGUgc2VsaW51eApFT0YKfQoKcGRucygpIHsKICBpZiBbICIkRE5TIiA9PSAidHJ1ZSIgXTsgdGhlbgogICAgSVA9JChubWNsaSBjb24gc2hvdyAtLWFjdGl2ZSBpZCAiU3lzdGVtIGV0aDAifGdyZXAgSVA0LkFERFJFU1N8IC91c3IvYmluL2dyZXAgLVBvICcoXGQrXC5cZCtcLlxkK1wuXGQrKScpCiAgICBzZXQgLS0gJERPTUFJTgogICAgWk9ORT0kMQogICAgSE9TVD0kKGhvc3RuYW1lIC1zKS4kWk9ORS4KCiAgICBKU09OPSd7InJyc2V0cyI6IFt7Im5hbWUiOiAiX0hPU1RfIiwidHlwZSI6ICJBIiwidHRsIjogODY0MDAsImNoYW5nZXR5cGUiOiAiUkVQTEFDRSIsInJlY29yZHMiOiBbeyJjb250ZW50IjogIl9JUF8iLCJkaXNhYmxlZCI6IGZhbHNlIH1dfV19JwoKICAgIEpTT049JChlY2hvICRKU09OIHwgc2VkICJzL19IT1NUXy8kSE9TVC9nIiB8IHNlZCAicy9fSVBfLyRJUC9nIikKICAgIGVjaG8gJEpTT04gPi90bXAvcGRucy5qc29uCiAgICBlY2hvIHVwZGF0ZSBETlMgd2l0aCAkSlNPTgogICAgY3VybCAtdiAtWCBQQVRDSCAtLWRhdGEgIkAvdG1wL3BkbnMuanNvbiIgLUggIlgtQVBJLUtleTogJFBETlNfUEFTU1dPUkQiICRQRE5TX1VSTC9hcGkvdjEvc2VydmVycy9sb2NhbGhvc3Qvem9uZXMvJFpPTkUKCiAgZmkKfQoKIyBJbnN0YWxsIFphYmJpeCBhZ2VudAp6YWJiaXgoKSB7CiAgICBpZiBbICIkWkFCQklYIiA9PSAidHJ1ZSIgXTsgdGhlbgogICAgICAgIGVjaG8gIkluc3RhbGxpbmcgWmFiYml4IHl1bSByZWxlYXNlIHJwbSIKICAgICAgICBycG0gLVV2aCBodHRwOi8vcmVwby56YWJiaXguY29tL3phYmJpeC8zLjIvcmhlbC83L3g4Nl82NC96YWJiaXgtcmVsZWFzZS0zLjItMS5lbDcubm9hcmNoLnJwbQogICAgICAgICMgZm9yY2UgYWRkIHphYmJpeCBrZXlzCiAgICAgICAgcnBtIC0taW1wb3J0IGh0dHBzOi8vcmVwby56YWJiaXguY29tL1JQTS1HUEctS0VZLVpBQkJJWC03OUVBNUVENAogICAgICAgIHJwbSAtLWltcG9ydCBodHRwczovL3JlcG8uemFiYml4LmNvbS9SUE0tR1BHLUtFWS1aQUJCSVgtQTE0RkU1OTEKCiAgICAgICAgZWNobyAiSW5zdGFsbGluZyBaYWJiaXggemFiYml4IGFnZW50IgogICAgICAgIHl1bSBpbnN0YWxsIHphYmJpeC1hZ2VudCAteQogICAgICAgIAogICAgICAgIHNldCAtLSAkRE9NQUlOCiAgICAgICAgWk9ORT0kMQogICAgICAgIEhPU1Q9JChob3N0bmFtZSAtcykuJFpPTkUKICAgICAgICAKICAgICAgICAjIE1vZGlmeSB0aGUgWmFiYml4IGNvbmZpZ3VyYXRpb24KICAgICAgICBzZWQgLWkgInMvU2VydmVyPTEyNy4wLjAuMS9TZXJ2ZXI9JHtaQUJCSVhfU0VSVkVSfS8iIC9ldGMvemFiYml4L3phYmJpeF9hZ2VudGQuY29uZgogICAgICAgIHNlZCAtaSAicy9TZXJ2ZXJBY3RpdmU9MTI3LjAuMC4xL1NlcnZlckFjdGl2ZT0ke1pBQkJJWF9TRVJWRVJ9LyIgL2V0Yy96YWJiaXgvemFiYml4X2FnZW50ZC5jb25mCiAgICAgICAgc2VkIC1pICJzL1NlcnZlckFjdGl2ZT0xMjcuMC4wLjEvU2VydmVyQWN0aXZlPSR7WkFCQklYX1NFUlZFUn0vIiAvZXRjL3phYmJpeC96YWJiaXhfYWdlbnRkLmNvbmYKICAgICAgICBzZWQgLWkgInMvSG9zdG5hbWU9WmFiYml4XCBzZXJ2ZXIvSG9zdG5hbWU9JHtIT1NUfS8iIC9ldGMvemFiYml4L3phYmJpeF9hZ2VudGQuY29uZgogICAgICAgIGVjaG8gIkhvc3RNZXRhZGF0YT0ke1pBQkJJWF9IT1NUTUVUQURBVEF9IiA+PiAvZXRjL3phYmJpeC96YWJiaXhfYWdlbnRkLmNvbmYKCiAgICAgICAgIyBFbmFibGUgYW5kIHN0YXJ0IFphYmJpeCBhZ2VudAogICAgICAgIHN5c3RlbWN0bCBzdGFydCB6YWJiaXgtYWdlbnQKICAgICAgICBzeXN0ZW1jdGwgZW5hYmxlIHphYmJpeC1hZ2VudAogICAgZmkKfQoKIyBzZXQgZG9tYWluCmRvbWFpbigpIHsKICAjIG9ubHkgZm9yIHRoZSBvcGVubG9naWMgY2VudG9zNyBpbWFnZSBvbiBhenVyZQogIGlmIFsgJE9TID09ICJjZW50b3M3IiBdOyB0aGVuCiAgICBlY2hvICJkb21haW4gc2V0IHRvICRET01BSU4iCiAgICBubWNsaSBjb24gbW9kICJTeXN0ZW0gZXRoMCIgaXB2NC5kbnMtc2VhcmNoICIkRE9NQUlOIgogIGZpCgogICMgc2V0IGhvc3RuYW1lIHRvIGZxZG4gaWYgbm90IGRvbmUgeWV0CiAgaWYgWyAhICQoL2Jpbi9ob3N0bmFtZSB8IGdyZXAgIi5henIubGFiLnBhbmRvcmFsYi5uZXQiKSBdOyB0aGVuIAoJL2Jpbi9ob3N0bmFtZWN0bCBzZXQtaG9zdG5hbWUgJCgvYmluL2hvc3RuYW1lKS5henIubGFiLnBhbmRvcmFsYi5uZXQKICBmaQp9CgojIHNldCBzd2FwIGZpbGUKc3dhcCgpIHsKICBpZiBbICIkU1dBUCIgPT0gImZhbHNlIiBdOyB0aGVuCiAgICBlY2hvICJkaXNhYmxlIHN3YXAiCiAgICBzZWQgLWkgInMvXlJlc291cmNlRGlzay5FbmFibGVTd2FwPS4qL1Jlc291cmNlRGlzay5FbmFibGVTd2FwPW4vIiAvZXRjL3dhYWdlbnQuY29uZgogIGVsaWYgWyAiJFNXQVAiICE9ICIiIF07IHRoZW4KICAgIGVjaG8gInNldCBzd2FwIHRvICRTV0FQIE1CIgogICAgc2VkIC1pICJzL15SZXNvdXJjZURpc2suRW5hYmxlU3dhcD0uKi9SZXNvdXJjZURpc2suRW5hYmxlU3dhcD15LyIgL2V0Yy93YWFnZW50LmNvbmYKICAgIHNlZCAtaSAicy9eUmVzb3VyY2VEaXNrLlN3YXBTaXplTUI9LiovUmVzb3VyY2VEaXNrLlN3YXBTaXplTUI9JFNXQVAvIiAvZXRjL3dhYWdlbnQuY29uZgogIGZpCn0KCiMgY29uZmlndXJlIHNlbGludXgKc2VsaW51eCgpIHsKICBNT0RFPSIiCiAgaWYgWyAiJFNFTElOVVgiID09ICJ0cnVlIiBdOyB0aGVuCiAgICBNT0RFPSJlbmZvcmNpbmciCiAgZWxpZiBbICIkU0VMSU5VWCIgPT0gImZhbHNlIiBdOyB0aGVuCiAgICBNT0RFPSJkaXNhYmxlZCIKICBmaQogIGlmIFsgIiRNT0RFIiAhPSAiIiBdOyB0aGVuCiAgICBlY2hvIHNlbGludXggc2V0IHRvICRNT0RFCiAgICBzZWQgLWkgInMvXlNFTElOVVg9LiovU0VMSU5VWD0kTU9ERS9nIiAvZXRjL3NlbGludXgvY29uZmlnCiAgZmkKfQoKIyB1cGRhdGUgdGhlIHN5c3RlbQp1cGRhdGUoKSB7CiAgaWYgWyAiJFVQREFURSIgPT0gInRydWUiIF07IHRoZW4KICAgIGVjaG8gIkV4ZWN1dGluZyB5dW0uLi4iCiAgICB5dW0gLXkgLS1leGNsdWRlPVdBTGludXhBZ2VudCogdXBkYXRlCiAgZmkKfQoKIyBzb21ldGltZXMgdGhlIHNjcmlwdCBnZXRzIGV4ZWN1dGVkIGJlZm9yZSB0aGUgbmV0d29yayBpcyByZWFkeQp3YWl0X2Zvcl9uZXR3b3JrKCkgewogIGlmIFsgIiRXQUlUIiA9PSAidHJ1ZSIgXTsgdGhlbgogICAgZWNobyAid2FpdGluZyBmb3IgbmV0d29yay4uLiIKICAgIG49MAogICAgdW50aWwgWyAkbiAtZ2UgNSBdOyAjIHRyeSB4IHRpbWVzCiAgICBkbwogICAgICBzbGVlcCA1CiAgICAgIHBpbmcgLXEgLWMxIHd3dy5nb29nbGUuY29tID4vZGV2L251bGwgMj4mMSAmJiBicmVhazsKICAgICAgbj0kWyRuKzFdCiAgICBkb25lCiAgICBlY2hvICJ3YWl0IGxvb3AgY291bnQ6ICRuIgogIGZpCn0KCiMgZXZhbHV0ZSB0aGUgb3MuIGN1cnJlbnRseSBvbmx5IGNlbnRvczcgaXMgc3VwcG9ydGVkCmxpbnV4X3ZlcnNpb24oKSB7CiAgaWYgWyAtZiAvZXRjL3N5c3RlbS1yZWxlYXNlIF0gJiYKICAgIFsgISAkKGVncmVwIC1xICdeQ2VudE9TLitcczcuKycgL2V0Yy9zeXN0ZW0tcmVsZWFzZSkgXTsgdGhlbgogICAgT1M9ImNlbnRvczciCiAgICBlY2hvICJPcGVyYXRpb24gU3lzdGVtIGZvdW5kOiAkT1MiCiAgZWxzZQogICAgZWNobyAiVGhpcyBvcGVyYXRpbmcgc3lzdGVtIGlzIG5vdCBzdXBwb3J0ZWQuIgogICAgZXhpdCAxCiAgZmkKICBpZiBbIC14IC9vcHQvb21pL2Jpbi9zdXBwb3J0L2NvbmZpZ19rZXl0YWJfdXBkYXRlLnNoIF07IHRoZW4KICAgIGVjaG8gcmVtb3ZpbmcgYXp1cmUgY3JvbnRhYiBlbnRyeQogICAgL29wdC9vbWkvYmluL3N1cHBvcnQvY29uZmlnX2tleXRhYl91cGRhdGUuc2ggLS11bmNvbmZpZ3VyZQogIGZpCn0KCnJlYm9vdCgpIHsKICBpZiBbICIkUkVCT09UIiA9PSAidHJ1ZSIgXTsgdGhlbgogICAgZ2V0ZW5mb3JjZV9zdGF0dXM9JChnZXRlbmZvcmNlKQogICAgaWYgICBbICIke2dldGVuZm9yY2Vfc3RhdHVzLCx9IiA9PSAiZGlzYWJsZWQiIF0gJiYgXAogICAgICAgICBbICIkU0VMSU5VWCIgPT0gInRydWUiIF07IHRoZW4KICAgICAgICAgICBCT09UPSJ0cnVlIgogICAgZWxpZiBbICIke2dldGVuZm9yY2Vfc3RhdHVzLCx9IiAhPSAiZGlzYWJsZWQiIF0gJiYgXAogICAgICAgICBbICIkU0VMSU5VWCIgPT0gImZhbHNlIiBdOyB0aGVuCiAgICAgICAgICAgQk9PVD0idHJ1ZSIKICAgIGZpCgogICAgaWYgWyAiJEJPT1QiID09ICJ0cnVlIiBdOyB0aGVuCiAgICAgIGVjaG8gcmVib290aW5nLi4uCiAgICAgIHNodXRkb3duIC1yIDEKICAgIGZpCiAgZmkKfQoKbG9nZ2luZygpIHsKICAjIENsb3NlIFNURE9VVCBmaWxlIGRlc2NyaXB0b3IKICBleGVjIDE8Ji0KICAjIENsb3NlIFNUREVSUiBGRAogIGV4ZWMgMjwmLQogICMgT3BlbiBTVERPVVQgYXMgJExPR19GSUxFIGZpbGUgZm9yIHJlYWQgYW5kIHdyaXRlLgogIGV4ZWMgMTw+JExPR0ZJTEUKICAjIFJlZGlyZWN0IFNUREVSUiB0byBTVERPVVQKICBleGVjIDI+JjEKfQoKCiMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjCiMgTUFJTgoKCiMgZXZhbHVhdGUgcGFyYW1ldGVycwoKd2hpbGUgZ2V0b3B0cyAiaGQ6bDptbnJzOlN1eloiIG9wdDsgZG8KICBjYXNlICRvcHQgaW4KICAgIGgpIHVzYWdlOyBleGl0IDEgOzsKICAgIGQpIERPTUFJTj0iJE9QVEFSRyIgOzsKICAgIGwpIExPR0ZJTEU9IiRPUFRBUkciIDs7CiAgICBtKSBaQUJCSVg9InRydWUiOzsKICAgIG4pIEROUz0idHJ1ZSIgOzsKICAgIHIpIFJFQk9PVD0idHJ1ZSIgOzsKICAgIHMpIFNXQVA9IiRPUFRBUkciIDs7CiAgICBTKSBTV0FQPSJmYWxzZSIgOzsKICAgIHUpIFVQREFURT0idHJ1ZSIgOzsKICAgIHcpIFdBSVQ9InRydWUiIDs7CiAgICB6KSBTRUxJTlVYPSJmYWxzZSIgOzsKICAgIFopIFNFTElOVVg9InRydWUiIDs7CiAgICA6KQogICAgICBlY2hvICJPcHRpb24gLSRPUFRBUkcgcmVxdWlyZXMgYW4gYXJndW1lbnQuIgogICAgICBleGl0IDEKICAgICAgOzsKICBlc2FjCmRvbmUKClNXQVA9MTAwMApTRUxJTlVYPWZhbHNlClJFQk9PVD10cnVlCgojIGZvciBwYXJhbWV0ZXIgd2l0aG91dCBvcHRpb25zIGJ1dCB3ZSBkb24ndCB1c2UgaXQgaGVyZQojc2hpZnQgJCgoT1BUSU5ELTEpKQojWyAiJDEiID0gIi0tIiBdICYmIHNoaWZ0CiNsZWZ0b3ZlcnMgYXJlIGluICRACgpsb2dnaW5nCmVjaG8gJDAgdmVyc2lvbiAkVkVSU0lPTgpsaW51eF92ZXJzaW9uCndhaXRfZm9yX25ldHdvcmsKdXBkYXRlCnNlbGludXgKc3dhcApkb21haW4KcGRucwp6YWJiaXgKcmVib290Cg=="
+                }
+            },
+            "copy": {
+              "name": "scriptCopy",
+              "count": "[parameters('numberOfInstances')]"
+            }
+        }
+    ],
+    "outputs": {
+        "fqdn": {
+            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmDnsPrefix'),'1',parameters('environment'),'-pip1'))).dnsSettings.fqdn]",
+            "type": "string"
+        }
+    }
+}

@@ -1,0 +1,60 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUsername": {
+          "value": "ctxconfig"
+        },
+        "adminPassword": {
+          "value": "Admin#1234"
+        },
+        "vmDnsPrefix": {
+          "value": "azeausjumpbox"
+        },
+        "virtualNetworkName": {
+          "value": "demo-vnet-east-us-1"
+        },
+        "vnetRg": {
+          "value": "demo-vnet-east-us-1"
+        },
+        "vmSize": {
+          "value": "Standard_A2"
+        },
+        "subnetName": {
+          "value": "Dev-Back-1"
+        },
+        "numberOfInstances": {
+            "value": 1
+        },
+        "centOSVersion": {
+            "value": "7_8"
+        },
+        "imageVersion": {
+            "value": "7.8.2020062400"
+        },
+        "environment": {
+            "value": ""
+        },
+        "dataDiskSizeInGB": {
+            "value": "20"
+        },
+        "sshkeyData": {
+            "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5+qZkuEeAVLZWE6WxYgr775r7HzujUSsUevXUeB8FMd2HElizQ6RvkJpyBZK/ye22Q8ieZNrS7F82IBv7BcHMujskuxpn6DK2vtsqSPeBjG0tvI7ez5LEut3LyevQfuD7oQBusAqJgdijUyQtENiZt2zJvrBE0NXpBCnYSC2/15tYFZmdWdDC9tlJzwZZaW/10dK0obdU3eFjoRepUmcyx/LmM26umxE5G0vVqjS5OWnxv0G+kHPek7tdrtObKcnfrXFP42FTC/oGNUUUdqjEt7/zWhHOjwyzo6WGS+p2Vomp0TKhgeBzm/HwH5PgAGM1YN9A/Aa1oGekPQSLsWpJ mschirrmeister@bembel.local"
+        },
+        "pip_name_dns": {
+          "value": "democewazjb1"
+        },
+        "TagServerType": {
+          "value": "Admin"
+          },
+        "TagServerRole": {
+          "value": "Jumpbox"
+        },
+        "TagEnvironment": {
+          "value": "Testing"
+        },
+        "TmplTimestamp": {
+          "value": "1"
+        }
+    }
+}

@@ -1,0 +1,135 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "vnetRg": {
+        "type": "string",
+        "metadata": {
+          "description": "vnet resource group name"
+        }
+      },
+      "jumpboxRg": {
+        "type": "string",
+        "metadata": {
+          "description": "jumpBox resource group name"
+        }
+      },
+      "nsgRg": {
+        "type": "string",
+        "metadata": {
+          "description": "vnet resource group name"
+        }
+      },
+      "adcRg": {
+        "type": "string",
+        "metadata": {
+          "description": "vnet resource group name"
+        }
+      },
+      "location": {
+        "type": "string",
+        "metadata": {
+          "description": "location"
+        }
+      }
+    },
+    "variables": {
+      "_comment1": "If you need a comments in those arm templates, you could do it this way with variables"
+    },
+    "resources": [
+        {
+          "name": "linkedDeployment1",
+          "type": "Microsoft.Resources/deployments",
+          "apiVersion": "2019-05-01",
+          "resourceGroup": "[parameters('vnetRg')]",
+          "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+              "uri": "https://ctxmiscstor1.blob.core.windows.net/scriptspublic/arm/templates/nested/ctx-azure-templates-adc-cew-demo/vnet/azuredeploy.json",
+              "contentVersion": "1.0.0.0"
+            },
+            "parametersLink": {
+              "uri": "https://ctxmiscstor1.blob.core.windows.net/scriptspublic/arm/templates/nested/ctx-azure-templates-adc-cew-demo/vnet/azuredeploy-east-us.parameters.json",
+              "contentVersion": "1.0.0.0"
+            },
+            "dependsOn": [
+              "[resourceId('Microsoft.Resources/resourceGroups', 'ctx-vnet-east-us-2')]"
+            ]
+          }
+        },
+        {
+          "name": "linkedDeployment2",
+          "type": "Microsoft.Resources/deployments",
+          "apiVersion": "2019-05-01",
+          "resourceGroup": "[parameters('jumpboxRg')]",
+          "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+              "uri": "https://ctxmiscstor1.blob.core.windows.net/scriptspublic/arm/templates/nested/ctx-azure-templates-adc-cew-demo/jumpbox/azuredeploy.json",
+              "contentVersion": "1.0.0.0"
+            },
+            "parametersLink": {
+              "uri": "https://ctxmiscstor1.blob.core.windows.net/scriptspublic/arm/templates/nested/ctx-azure-templates-adc-cew-demo/jumpbox/azuredeploy-east-us.parameters.json",
+              "contentVersion": "1.0.0.0"
+            },
+            "dependsOn": [
+              "linkedDeployment1"
+            ]
+          }
+        },
+        {
+          "name": "linkedDeployment3",
+          "type": "Microsoft.Resources/deployments",
+          "apiVersion": "2019-05-01",
+          "resourceGroup": "[parameters('nsgRg')]",
+          "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+              "uri": "https://ctxmiscstor1.blob.core.windows.net/scriptspublic/arm/templates/nested/ctx-azure-templates-adc-cew-demo/securitygroups/azuredeploy.json",
+              "contentVersion": "1.0.0.0"
+            },
+            "parametersLink": {
+              "uri": "https://ctxmiscstor1.blob.core.windows.net/scriptspublic/arm/templates/nested/ctx-azure-templates-adc-cew-demo/securitygroups/azuredeploy-east-us.parameters.json",
+              "contentVersion": "1.0.0.0"
+            },
+            "dependsOn": [
+              "linkedDeployment2"
+            ]
+          }
+        },
+        {
+          "name": "linkedDeployment4",
+          "type": "Microsoft.Resources/deployments",
+          "apiVersion": "2019-05-01",
+          "resourceGroup": "[parameters('adcRg')]",
+          "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+              "uri": "https://ctxmiscstor1.blob.core.windows.net/scriptspublic/arm/templates/nested/ctx-azure-templates-adc-cew-demo/adc/azuredeploy.json",
+              "contentVersion": "1.0.0.0"
+            },
+            "parametersLink": {
+              "uri": "https://ctxmiscstor1.blob.core.windows.net/scriptspublic/arm/templates/nested/ctx-azure-templates-adc-cew-demo/adc/azuredeploy-east-us.parameters.json",
+              "contentVersion": "1.0.0.0"
+            },
+            "dependsOn": [
+              "linkedDeployment3"
+            ]
+          }
+        }
+    ],
+    "outputs": {
+        "adcFqdn": {
+            "value": "[reference('linkedDeployment4').outputs.fqdn.value]",
+            "type": "string"
+        },
+        "adcPublicIPs": {
+            "value": "[reference('linkedDeployment4').outputs.publicIPs.value.VM1.publicIP]",
+            "type": "string"
+        },
+        "jumpboxFqdn": {
+            "value": "[reference('linkedDeployment2').outputs.fqdn.value]",
+            "type": "string"
+        }
+    }
+}

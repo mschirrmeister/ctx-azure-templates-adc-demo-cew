@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "VNETName": {
+      "value": "demo-vnet-east-us-1"
+    },
+    "addressprefix": {
+      "value": "10.200.32.0/19"
+    },
+    "Subnet1Name": {
+      "value": "Dev-Front-1"
+    },
+    "Subnet1Prefix": {
+      "value": "10.200.34.0/24"
+    },
+    "Subnet2Name": {
+      "value": "Dev-Back-1"
+    },
+    "Subnet2Prefix": {
+      "value": "10.200.35.0/24"
+    },
+    "Subnet3Name": {
+      "value": "Stage-Front-1"
+    },
+    "Subnet3Prefix": {
+      "value": "10.200.36.0/24"
+    },
+    "Subnet4Name": {
+      "value": "Stage-Back-1"
+    },
+    "Subnet4Prefix": {
+      "value": "10.200.38.0/23"
+    },
+    "Subnet5Name": {
+      "value": "Prod-Front-1"
+    },
+    "Subnet5Prefix": {
+      "value": "10.200.40.0/24"
+    },
+    "Subnet6Name": {
+      "value": "Prod-Back-1"
+    },
+    "Subnet6Prefix": {
+      "value": "10.200.42.0/23"
+    },
+    "Subnet7Name": {
+      "value": "AppGw-1"
+    },
+    "Subnet7Prefix": {
+      "value": "10.200.32.128/26"
+    },
+    "Subnet8Name": {
+      "value": "GatewaySubnet"
+    },
+    "Subnet8Prefix": {
+      "value": "10.200.32.0/28"
+    }
+  }
+}

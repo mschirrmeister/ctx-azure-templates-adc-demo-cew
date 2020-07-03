@@ -1,0 +1,87 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUsername": {
+          "value": "ctxconfig"
+        },
+        "adminPassword": {
+          "value": "Admin#1234"
+        },
+        "avSet": {
+          "value": "nsvpx-as1"
+        },
+        "vmDnsPrefix": {
+          "value": "azeausnsvpx30"
+        },
+        "storageAccountType": {
+          "value": "Premium_LRS"
+        },
+        "storageAccountTier": {
+            "value": "Premium"
+        },
+        "diagnosticsStorageAccountName": {
+          "value": "demoeausnsvpxstor1"
+        },
+        "diagnosticsStorageAccountType": {
+          "value": "Standard_LRS"
+        },
+        "diagnosticsStorageAccountTier": {
+            "value": "Standard"
+        },
+        "virtualNetworkName": {
+          "value": "demo-vnet-east-us-1"
+        },
+        "vnetRg": {
+          "value": "demo-vnet-east-us-1"
+        },
+        "vmSize": {
+          "value": "Standard_DS3_v2"
+        },
+        "subnetName_Front": {
+          "value": "Dev-Front-1"
+        },
+        "subnetName_Back": {
+          "value": "Dev-Back-1"
+        },
+        "numberOfInstances": {
+            "value": 1
+        },
+        "NetScalerVersion": {
+            "value": "netscalerbyol"
+        },
+        "imageVersion": {
+            "value": "latest"
+        },
+        "environment": {
+            "value": ""
+        },
+        "pip_name": {
+          "value": "ctx-citrixadc-pip"
+        },
+        "pip_name_dns": {
+          "value": "democewazeauscitrixadc"
+        },
+        "nsgRg": {
+          "value": "demo-network-security-groups-east-us-1"
+        },
+        "nsg_name": {
+          "value": "nsg-citrixadc-1-testing"
+        },
+        "TagServerType": {
+          "value": "LoadBalancer"
+          },
+        "TagServerRole": {
+          "value": "CitrixADC"
+        },
+        "TagEnvironment": {
+          "value": "Testing"
+        },
+        "subscriptionId": {
+          "value": ""
+        },
+        "TmplTimestamp": {
+          "value": "1"
+        }
+    }
+}

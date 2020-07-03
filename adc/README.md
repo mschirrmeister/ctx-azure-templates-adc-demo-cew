@@ -6,17 +6,16 @@ This project includes ARM templates for the Citrix ADCs.
 
 ## Description
 
-This template deploy n+1 machines of the type **Standard\_DS3\_v2**.  
-A dedicated diagnostic storage account is provisioned for the resource group.  
-All resources get provisioned into an existing VNet and Subnets.  
+This template deploys n+1 machines of the type **Standard\_DS3\_v2**.  
 
-You can define all the above and more in the parameters file.
+You can define various settings in the parameters file.
 
 This template deploys a Citrix ADC with the following
 
 - Uses a managed disk for the OS
 - 2 NICs (frontend and fackend)
 - custom data for a SNIP/VIP
+- separate storage account for VM diagnostic data
 
 Please also install the tool [jq](https://stedolan.github.io/jq/). It is used for output parsing for some commands below.
 

@@ -4,19 +4,18 @@ This project includes ARM templates for the Citrix ADCs.
 
 ## Description
 
-This template deploy n+1 machines of the type **Standard\_DS3\_v2**.  
-A dedicated diagnostic storage account is provisioned for the resource group.  
-All resources get provisioned into an existing VNet and Subnets.  
+This project includes some **Azure Resource Manager** (ARM) templates for a **Citrix ADC** in the cloud demo. 
 
-You can define all the above and more in the parameters file.
+The ADC requires a VNET, a backend and a frontend subnet and a separate network security group. There are templates for each of these in this project. If you already have vnet, subnets and security groups, you can use them and modify the appropriate parameters in the ADC template.
 
-This template deploys a Citrix ADC with the following
+If you do not want to use existing infrastructure, you can deploy everything from this project. This includes the following resources.
 
-- Uses a managed disk for the OS
-- 2 NICs (frontend and fackend)
-- custom data for a SNIP/VIP
+- VNET
+- Jumphost
+- ADC security group
+- ADC
 
-Please also install the tool [jq](https://stedolan.github.io/jq/). It is used for output parsing for some commands below.
+Please also install the tool [jq](https://stedolan.github.io/jq/). It is used for output parsing for some commands. In case you want to follow it exactly as below.
 
 ## Template parameter changes
 
@@ -37,13 +36,12 @@ You need to change at least the following parameters in the **Jumpbox** paramete
 
 ### Deploy into an existing environment
 
-If you deploy into an existing VNET with subnets, you need to change the following parameters.
+If you deploy into an existing VNET with subnets, you need to change the following parameters in the ADC template. 
 
-- virtualNetworkName (ADC/Jumpbox)
-- vnetRg (ADC/Jumpbox)
+- virtualNetworkName (ADC)
+- vnetRg (ADC)
 - subnetName\_Front (ADC)
 - subnetName\_Back (ADC)
-- subnetName (Jumpbox)
 - nsgRg (ADC)
 - nsg_name (ADC)
 
